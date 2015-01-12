@@ -1,0 +1,307 @@
+
+<html>
+
+<head>
+<title>Connect Four</title>
+
+
+<script type="text/javascript" src="http://d14to6y4nub5k1.cloudfront.net/local/jquery.min.js"></script>
+<script type="text/javascript" src="http://d14to6y4nub5k1.cloudfront.net/lib/codehs/library_live.js"></script>
+
+
+<style>
+canvas{
+    border: 1px solid black;
+}
+</style>
+
+</head>
+
+<body>
+<h1>Connect Four</h1>
+
+<div id="user-code" style="display:none;">
+var NUM_COLS = 7;
+var NUM_ROWS = 6;
+var turnText;
+
+var RADIUS = getWidth() / (NUM_COLS * 2);
+var COL_WIDTH = getWidth()/NUM_COLS;
+
+var background;
+var grid;
+var turn = true;
+var end = false;
+
+function start(){
+    setup();
+    mouseClickMethod(onClick);
+}
+
+function setup(){
+    background = new Rectangle(getWidth(), NUM_ROWS * RADIUS * 2);
+    background.setColor(Color.blue);
+    add(background);
+    
+    grid = new Grid(NUM_ROWS, NUM_COLS);
+    
+    for(var i = 0; i < NUM_ROWS; i++){
+        for(var j = 0; j < NUM_COLS; j++){
+            grid.set(i,j,0);
+            drawCircle(RADIUS, i, j);
+        }
+    }
+	
+	turnText = new Text("Black's turn");
+	turnText.setPosition(getWidth()/2 - turnText.getWidth()/2, getHeight() - 100);
+	add(turnText);
+    
+    
+    
+}
+
+function endGame(num){
+    removeAll();
+    end = true;
+    var text = new Text();
+    if(num == 1){
+        text.setText("Black wins!");
+    }else{
+        text.setColor(Color.red);
+        text.setText("Red wins!");
+    }
+    text.setPosition(100,100);
+    add(text);
+    
+}
+
+function onClick(e){
+    
+    if(end){
+        return;
+    }
+    
+    var col = e.getX()/COL_WIDTH;
+    col = col - col%1;
+    
+    for(var i = 0; i < NUM_ROWS; i++){
+        if(grid.get(i,col) == 0){
+            
+            var space = getElementAt(RADIUS + col*COL_WIDTH, 
+                                     background.getHeight() - RADIUS - RADIUS * 2 * i);
+            
+            if(turn){
+                space.setColor(Color.black);
+                grid.set(i,col,1);
+            }else{
+                space.setColor(Color.red);
+                grid.set(i,col,2);
+            }
+            
+            turn = !turn;
+			if(turn){
+				turnText.setText("Black's turn");
+				turnText.setColor(Color.BLACK);
+			}else{
+				turnText.setText("Red's turn");
+				turnText.setColor(Color.RED);
+			}	
+			
+            checkWinnerHorizontal(i,col);
+            checkWinnerVertical(i,col);
+            checkWinnerDiagonalUp(i,col);
+            checkWinnerDiagonalDown(i,col);
+            return;
+        }
+    }
+    
+    println("FULL COLUMN!");
+    
+    
+    
+    
+    
+}
+
+function checkWinnerDiagonalDown(i,j){
+    
+    var num = grid.get(i,j);
+    
+    while(true){
+        if(i < NUM_ROWS-1 && j > 0){
+            if(grid.get(i+1,j-1) == num){
+                i++;
+                j--;
+            }else{
+                break;
+            }
+        }else{
+            break;
+        }
+    }
+    if(i > 2 && j < NUM_COLS-3){
+        var winner = checkDiagonalDown(i,j,num);
+        if(winner){
+            endGame(num);
+        }
+    }
+    
+    
+}
+
+function checkDiagonalDown(i,j,num){
+    
+    for(var k = 1; k < 4; k++){
+        if(grid.get(i-k,j+k) != num){
+            return false;
+        }
+    }
+    return true;
+    
+}
+
+function checkWinnerDiagonalUp(i,j){
+    
+    var num = grid.get(i,j);
+    
+    while(true){
+        if(i > 0 && j > 0){
+            if(grid.get(i-1,j-1) == num){
+                i--;
+                j--;
+            }else{
+                break;
+            }
+        }else{
+            break;
+        }
+    }
+    if(i < NUM_ROWS-3 && j < NUM_COLS-3){
+        var winner = checkDiagonalUp(i,j,num);
+        if(winner){
+            endGame(num);
+        }
+    }
+    
+    
+}
+
+function checkDiagonalUp(i,j,num){
+    
+    for(var k = 1; k < 4; k++){
+        if(grid.get(i+k,j+k) != num){
+            return false;
+        }
+    }
+    return true;
+    
+}
+
+function checkWinnerVertical(i,j){
+    
+    var num = grid.get(i,j);
+    
+    while(true){
+        if(i > 0){
+            if(grid.get(i-1,j) == num){
+                i--;
+            }else{
+                break;
+            }
+        }else{
+            break;
+        }
+    }
+    if(i < NUM_ROWS-3){
+        var winner = checkVertical(i,j,num);
+        if(winner){
+            endGame(num);
+        }
+    }
+}
+
+function checkVertical(i,j,num){
+    
+    for(var k = 1; k < 4; k++){
+        if(grid.get(i+k,j) != num){
+            return false;
+        }
+    }
+    return true;
+    
+}
+
+
+
+function checkWinnerHorizontal(i,j){
+    
+    var num = grid.get(i,j);
+    
+    while(true){
+        if(j > 0){
+            if(grid.get(i,j-1) == num){
+                j--;
+            }else{
+                break;
+            }
+        }else{
+            break;
+        }
+    }
+    if(j < NUM_COLS-3){
+        var winner = checkHorizontal(i,j,num);
+        if(winner){
+            endGame(num);
+        }
+    
+    }
+    
+    
+    
+    
+    
+    
+}
+
+function checkHorizontal(i,j, num){
+    
+    for(var k = 1; k < 4; k++){
+        if(grid.get(i,j+k) != num){
+            return false;
+        }
+    }
+    return true;
+    
+    
+}
+
+function drawCircle(radius, x, y){
+    var circle = new Circle(radius);
+    circle.setPosition(radius + y * radius * 2, radius + x * radius * 2);
+    circle.setColor(Color.white);
+    add(circle);
+}
+
+</div>
+
+<canvas 
+width="400"
+height="500"
+class="codehs-editor-canvas"></canvas>
+
+<script>
+var g = new CodeHSGraphics({
+    canvas: $('.codehs-editor-canvas')
+});
+// run test # here.
+g.runCode($("#user-code").text());
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
